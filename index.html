@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trænings Lykkehjul</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff6600">
+
+<style>
+body {
+    font-family: 'Comic Sans MS', sans-serif;
+    text-align: center;
+    background: linear-gradient(to bottom, #6ec6ff, #ffffff);
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    padding: 20px;
+    border-radius: 25px;
+    max-width: 420px;
+    margin: auto;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+}
+
+h1 {
+    color: #ff6600;
+}
+
+input {
+    margin: 5px;
+    padding: 10px;
+    border-radius: 12px;
+    border: 2px solid #ddd;
+    width: 85%;
+    font-size: 14px;
+}
+
+button {
+    padding: 12px 20px;
+    margin: 10px;
+    font-size: 16px;
+    border-radius: 20px;
+    border: none;
+    background-color: #ffcc00;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #ff9900;
+}
+
+#wheel {
+    margin: 20px auto;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    border: 8px solid #ff6600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    background: #fff3cd;
+    transition: transform 1s ease-out;
+    padding: 10px;
+}
+
+.progress-bar {
+    width: 100%;
+    background: #eee;
+    border-radius: 20px;
+    margin: 10px 0;
+}
+
+.progress-fill {
+    height: 22px;
+    border-radius: 20px;
+    background: linear-gradient(to right, #00cc66, #009933);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.reward-img {
+    height: 150px;
+    width: 100px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    opacity: 0.5;
+    transition: 0.4s;
+}
+
+.reward-img.active {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+#rewardMessage {
+    font-size: 20px;
+    color: #ff0000;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎯 Trænings Hjul</h1>
+
+<div class="container">
+
+<h3>Indtast 5 øvelser</h3>
+
+<input type="text" id="ex1" placeholder="Øvelse 1">
+<input type="text" id="ex2" placeholder="Øvelse 2">
+<input type="text" id="ex3" placeholder="Øvelse 3">
+<input type="text" id="ex4" placeholder="Øvelse 4">
+<input type="text" id="ex5" placeholder="Øvelse 5">
+
+<div id="wheel">Drej!</div>
+
+<button onclick="spinWheel()">Drej 🎡</button>
+<button onclick="completeExercise()">Udført ✅</button>
+
+<h3>Øvelser (0-5)</h3>
+<div class="progress-bar">
+    <div id="exerciseProgress" class="progress-fill"></div>
+</div>
+
+<h3>Dage (0-10)</h3>
+<div class="progress-bar">
+    <div id="dayProgress" class="progress-fill"></div>
+</div>
+
+<h3>🎁 10 dage = Pokémon kort</h3>
+<img id="rewardCard" class="reward-img" src="pokemonkort.jpg">
+
+<div id="rewardMessage"></div>
+
+</div>
+
+<script>
+let exerciseCount = 0;
+let dayCount = 0;
+
+function saveData() {
+    localStorage.setItem("exerciseCount", exerciseCount);
+    localStorage.setItem("dayCount", dayCount);
+}
+
+function loadData() {
+    exerciseCount = parseInt(localStorage.getItem("exerciseCount")) || 0;
+    dayCount = parseInt(localStorage.getItem("dayCount")) || 0;
+    updateUI();
+}
+
+function spinWheel() {
+    const exercises = [
+        ex1.value, ex2.value, ex3.value, ex4.value, ex5.value
+    ].filter(e => e !== "");
+
+    if (exercises.length === 0) {
+        alert("Indtast mindst én øvelse!");
+        return;
+    }
+
+    const random = exercises[Math.floor(Math.random() * exercises.length)];
+    wheel.innerText = random;
+    wheel.style.transform = "rotate(" + (Math.random()*1080) + "deg)";
+}
+
+function completeExercise() {
+    exerciseCount++;
+
+    if (exerciseCount >= 5) {
+        exerciseCount = 0;
+        dayCount++;
+    }
+
+    if (dayCount >= 10) {
+        document.getElementById("rewardMessage").innerText =
+            "🎉 DU HAR VUNDET ET POKÉMON KORT! 🎉";
+        document.getElementById("rewardCard").classList.add("active");
+        dayCount = 0;
+    }
+
+    updateUI();
+    saveData();
+}
+
+function updateUI() {
+    exerciseProgress.style.width = (exerciseCount/5)*100 + "%";
+    dayProgress.style.width = (dayCount/10)*100 + "%";
+}
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js');
+}
+
+loadData();
+</script>
+
+</body>
+</html>
