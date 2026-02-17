@@ -1,8 +1,9 @@
 {
-  "name": "Trænings Lykkehjul PRO",
-  "short_name": "HjulPRO",
-  "start_url": "index.html",
+  "name": "Træningsapp til Laurits",
+  "short_name": "LauritsApp",
+  "start_url": "./index.html",
   "display": "standalone",
+  "scope": "./",
   "background_color": "#ffffff",
   "theme_color": "#ff6600",
   "icons": [
