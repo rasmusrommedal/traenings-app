@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Laurits' træningshjul</title>
+<title>Trænings Lykkehjul PRO v2.1</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff6600">
 
@@ -16,7 +16,6 @@ body {
     padding: 20px;
     overflow-x: hidden;
 }
-
 .container {
     background: white;
     padding: 20px;
@@ -25,29 +24,9 @@ body {
     margin: auto;
     box-shadow: 0 15px 35px rgba(0,0,0,0.2);
 }
-
 h1 { color: #ff6600; }
-
-input {
-    margin: 5px;
-    padding: 10px;
-    border-radius: 12px;
-    border: 2px solid #ddd;
-    width: 85%;
-    font-size: 14px;
-}
-
-button {
-    padding: 12px 20px;
-    margin: 10px 5px;
-    font-size: 16px;
-    border-radius: 20px;
-    border: none;
-    background-color: #ffcc00;
-    cursor: pointer;
-    font-weight: bold;
-}
-
+input { margin: 5px; padding: 10px; border-radius: 12px; border: 2px solid #ddd; width: 85%; font-size: 14px; }
+button { padding: 12px 20px; margin: 10px 5px; font-size: 16px; border-radius: 20px; border: none; background-color: #ffcc00; cursor: pointer; font-weight: bold; }
 button:hover { background-color: #ff9900; }
 
 #wheel-container {
@@ -56,27 +35,34 @@ button:hover { background-color: #ff9900; }
     width: 250px;
     height: 250px;
 }
-
 #wheel {
+    position: relative;
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    border: 8px solid #ff6600;
-    transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: transform 4s cubic-bezier(0.25,1,0.5,1);
 }
-
-#wheel canvas {
-    width: 100%;
-    height: 100%;
+.sector {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    top: 50%;
+    left: 50%;
+    transform-origin: 0% 0%;
+    clip-path: polygon(0% 0%, 100% 0%, 0% 100%);
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 5px;
 }
-
 #pointer {
     position: absolute;
     top: -10px;
     left: 50%;
     margin-left: -10px;
-    width: 0; 
-    height: 0; 
+    width: 0; height: 0;
     border-left: 10px solid transparent;
     border-right: 10px solid transparent;
     border-bottom: 20px solid red;
@@ -87,27 +73,25 @@ button:hover { background-color: #ff9900; }
 
 .reward-img { height: 150px; width: 100px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.35); opacity: 0.5; transition: 0.4s; }
 .reward-img.active { opacity: 1; transform: scale(1.1); }
-
 #rewardMessage { font-size: 20px; color: #ff0000; font-weight: bold; margin-top: 10px; }
 
 /* Konfetti */
 .confetti-piece {
     position: absolute;
     width: 8px; height: 8px;
-    background-color: #ffcc00;
     opacity: 0.8;
     animation: fall 3s linear forwards;
+    z-index: 9999;
 }
 @keyframes fall {
     0% { transform: translateY(0px) rotate(0deg); }
-    100% { transform: translateY(500px) rotate(360deg); opacity: 0; }
+    100% { transform: translateY(600px) rotate(360deg); opacity: 0; }
 }
 </style>
 </head>
-
 <body>
-<h1>🎯 Trænings Hjul PRO</h1>
 
+<h1>🎯 Trænings Hjul PRO v2.1</h1>
 <div class="container">
 
 <h3>Indtast 5 øvelser</h3>
@@ -119,7 +103,7 @@ button:hover { background-color: #ff9900; }
 
 <div id="wheel-container">
     <div id="pointer"></div>
-    <canvas id="wheel"></canvas>
+    <div id="wheel"></div>
 </div>
 
 <button onclick="spinWheel()">Drej 🎡</button>
@@ -155,53 +139,35 @@ function loadData() {
 }
 
 function drawWheel() {
-    const canvas = document.getElementById("wheel");
-    const ctx = canvas.getContext("2d");
-    const sectors = [
-        {color:"#FF6666", label: ex1.value || "Øvelse 1"},
-        {color:"#FFCC66", label: ex2.value || "Øvelse 2"},
-        {color:"#66CCFF", label: ex3.value || "Øvelse 3"},
-        {color:"#66FF66", label: ex4.value || "Øvelse 4"},
-        {color:"#CC66FF", label: ex5.value || "Øvelse 5"}
+    const wheel = document.getElementById("wheel");
+    wheel.innerHTML="";
+    const exercises = [
+        ex1.value || "Øvelse 1",
+        ex2.value || "Øvelse 2",
+        ex3.value || "Øvelse 3",
+        ex4.value || "Øvelse 4",
+        ex5.value || "Øvelse 5"
     ];
-    const center = canvas.width/2;
-    const radius = canvas.width/2 - 5;
-    const step = 2 * Math.PI / sectors.length;
-
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.save();
-    ctx.translate(center,center);
-
-    sectors.forEach((sec,i)=>{
-        ctx.beginPath();
-        ctx.moveTo(0,0);
-        ctx.arc(0,0,radius,i*step,(i+1)*step);
-        ctx.fillStyle = sec.color;
-        ctx.fill();
-        ctx.strokeStyle="#000";
-        ctx.stroke();
-        ctx.save();
-        ctx.rotate(i*step + step/2);
-        ctx.fillStyle="#000";
-        ctx.font="14px Comic Sans MS";
-        ctx.textAlign="right";
-        ctx.fillText(sec.label,radius-10,0);
-        ctx.restore();
-    });
-
-    ctx.restore();
+    const colors = ["#FF6666","#FFCC66","#66CCFF","#66FF66","#CC66FF"];
+    for(let i=0;i<5;i++){
+        const sec = document.createElement("div");
+        sec.className="sector";
+        sec.style.backgroundColor=colors[i];
+        sec.style.transform = `rotate(${i*72}deg)`;
+        sec.innerText = exercises[i];
+        wheel.appendChild(sec);
+    }
 }
 
-function spinWheel() {
+function spinWheel(){
     drawWheel();
     const spins = Math.floor(Math.random()*5 + 5); // 5-9 spins
     const deg = spins*360 + Math.floor(Math.random()*360);
     wheelRotation += deg;
-    const canvas = document.getElementById("wheel");
-    canvas.style.transform = `rotate(${wheelRotation}deg)`;
+    document.getElementById("wheel").style.transform = `rotate(${wheelRotation}deg)`;
 }
 
-function completeExercise() {
+function completeExercise(){
     exerciseCount++;
     if(exerciseCount >=5){
         exerciseCount=0;
@@ -234,16 +200,18 @@ function showReward(){
     const rewardCard = document.getElementById("rewardCard");
     rewardMsg.innerText="🎉 DU HAR VUNDET ET POKÉMON KORT! 🎉";
     rewardCard.classList.add("active");
-    createConfetti();
+    createConfetti(200); // meget konfetti
 }
 
-function createConfetti(){
-    for(let i=0;i<100;i++){
+function createConfetti(amount){
+    for(let i=0;i<amount;i++){
         const div = document.createElement("div");
         div.classList.add("confetti-piece");
         div.style.left=Math.random()*window.innerWidth+"px";
         div.style.backgroundColor=`hsl(${Math.random()*360},100%,50%)`;
-        div.style.animationDuration=(Math.random()*2+3)+"s";
+        div.style.width = (Math.random()*6+4)+"px";
+        div.style.height = (Math.random()*6+4)+"px";
+        div.style.animationDuration = (Math.random()*2+2)+"s";
         document.body.appendChild(div);
         setTimeout(()=>{div.remove();},4000);
     }
