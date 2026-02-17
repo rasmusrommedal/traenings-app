@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Laurits' træningshjul</title>
+<title>Træningsapp til Laurits</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff6600">
 
@@ -20,59 +20,66 @@ body {
     background: white;
     padding: 20px;
     border-radius: 25px;
-    max-width: 450px;
+    max-width: 480px;
     margin: auto;
     box-shadow: 0 15px 35px rgba(0,0,0,0.2);
 }
 h1 { color: #ff6600; }
-input { margin: 5px; padding: 10px; border-radius: 12px; border: 2px solid #ddd; width: 85%; font-size: 14px; }
-button { padding: 12px 20px; margin: 10px 5px; font-size: 16px; border-radius: 20px; border: none; background-color: #ffcc00; cursor: pointer; font-weight: bold; }
+
+input {
+    margin: 5px; padding: 10px; border-radius: 12px; border: 2px solid #ddd;
+    width: 85%; font-size: 14px;
+}
+
+button {
+    padding: 12px 20px; margin: 10px 5px; font-size: 16px;
+    border-radius: 20px; border: none; background-color: #ffcc00;
+    cursor: pointer; font-weight: bold;
+}
 button:hover { background-color: #ff9900; }
 
 #wheel-container {
-    position: relative;
-    margin: 20px auto;
-    width: 250px;
-    height: 250px;
+    position: relative; margin: 20px auto; width: 250px; height: 250px;
 }
 #wheel {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    border: 8px solid #ff6600;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 18px;
+    width: 100%; height: 100%; border-radius: 50%;
+    border: 8px solid #ff6600; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 18px;
     transition: transform 3s cubic-bezier(0.25,1,0.5,1);
 }
 #pointer {
-    position: absolute;
-    top: -10px;
-    left: 50%;
-    margin-left: -10px;
+    position: absolute; top: -10px; left: 50%; margin-left: -10px;
     width: 0; height: 0;
     border-left: 10px solid transparent;
     border-right: 10px solid transparent;
     border-bottom: 20px solid red;
 }
 
-.progress-bar { width: 100%; background: #eee; border-radius: 20px; margin: 10px 0; }
+.progress-bar {
+    width: 100%; background: #eee; border-radius: 20px; margin: 10px 0;
+}
 .progress-fill { height: 22px; border-radius: 20px; background: linear-gradient(to right, #00cc66, #009933); width: 0%; transition: width 0.3s ease; }
 
+/* Dage box container */
+#dayBoxes {
+    display: flex; justify-content: space-between; margin: 10px 0;
+}
+.day-box {
+    width: 28px; height: 28px; border: 2px solid #009933;
+    border-radius: 6px; background: #fff;
+    transition: background 0.3s;
+}
+
+/* Reward */
 .reward-img { height: 150px; width: 100px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.35); opacity: 0.5; transition: 0.4s; }
 .reward-img.active { opacity: 1; transform: scale(1.1); }
 #rewardMessage { font-size: 20px; color: #ff0000; font-weight: bold; margin-top: 10px; }
 
 /* Konfetti */
 .confetti-piece {
-    position: absolute;
-    width: 8px; height: 8px;
-    opacity: 0.8;
-    animation: fall 3s linear forwards;
-    z-index: 9999;
+    position: absolute; width: 8px; height: 8px; opacity: 0.8;
+    animation: fall 3s linear forwards; z-index: 9999;
 }
 @keyframes fall {
     0% { transform: translateY(0px) rotate(0deg); }
@@ -82,9 +89,9 @@ button:hover { background-color: #ff9900; }
 </head>
 <body>
 
-<h1>🎯 Trænings Hjul v2.2</h1>
-<div class="container">
+<h1>Træningsapp til Laurits</h1>
 
+<div class="container">
 <h3>Indtast 5 øvelser</h3>
 <input type="text" id="ex1" placeholder="Øvelse 1">
 <input type="text" id="ex2" placeholder="Øvelse 2">
@@ -105,7 +112,7 @@ button:hover { background-color: #ff9900; }
 <div class="progress-bar"><div id="exerciseProgress" class="progress-fill"></div></div>
 
 <h3>Dage (0-10)</h3>
-<div class="progress-bar"><div id="dayProgress" class="progress-fill"></div></div>
+<div id="dayBoxes"></div>
 
 <h3>🎁 10 dage = Pokémon kort</h3>
 <img id="rewardCard" class="reward-img" src="pokemonkort.jpg">
@@ -118,17 +125,25 @@ let exerciseCount = 0;
 let dayCount = 0;
 let wheelRotation = 0;
 
-function saveData(){
-    localStorage.setItem("exerciseCount", exerciseCount);
-    localStorage.setItem("dayCount", dayCount);
+// Initialize day boxes
+function initDayBoxes(){
+    const container = document.getElementById("dayBoxes");
+    container.innerHTML="";
+    for(let i=0;i<10;i++){
+        const box = document.createElement("div");
+        box.className="day-box";
+        container.appendChild(box);
+    }
 }
 
-function loadData(){
-    exerciseCount = parseInt(localStorage.getItem("exerciseCount")) || 0;
-    dayCount = parseInt(localStorage.getItem("dayCount")) || 0;
-    updateUI();
+function updateDayBoxes(){
+    const boxes = document.querySelectorAll(".day-box");
+    boxes.forEach((box,i)=>{
+        box.style.background = (i<dayCount) ? "#00cc66" : "#fff";
+    });
 }
 
+// Wheel functions
 function spinWheel(){
     const exercises = [
         ex1.value || "Øvelse 1",
@@ -136,7 +151,7 @@ function spinWheel(){
         ex3.value || "Øvelse 3",
         ex4.value || "Øvelse 4",
         ex5.value || "Øvelse 5"
-    ].filter(e => e !== "");
+    ].filter(e => e!=="");
 
     if(exercises.length===0){ alert("Indtast mindst én øvelse!"); return; }
 
@@ -144,18 +159,18 @@ function spinWheel(){
     const wheel = document.getElementById("wheel");
     wheel.innerText = chosen;
 
-    const spins = Math.floor(Math.random()*3 + 3);
-    const deg = spins*360;
-    wheelRotation += deg;
+    const spins = Math.floor(Math.random()*3+3);
+    wheelRotation += spins*360;
     wheel.style.transform = `rotate(${wheelRotation}deg)`;
 }
 
+// Complete exercise
 function completeExercise(){
     exerciseCount++;
-    if(exerciseCount >= 5){
-        exerciseCount = 0;
+    if(exerciseCount>=5){
+        exerciseCount=0;
         dayCount++;
-        if(dayCount >=10){
+        if(dayCount>=10){
             dayCount=0;
             showReward();
         }
@@ -164,43 +179,58 @@ function completeExercise(){
     saveData();
 }
 
+// Update UI
 function updateUI(){
     document.getElementById("exerciseProgress").style.width = (exerciseCount/5)*100 + "%";
-    document.getElementById("dayProgress").style.width = (dayCount/10)*100 + "%";
+    updateDayBoxes();
 }
 
+// Reset all
 function resetAll(){
-    exerciseCount = 0;
-    dayCount = 0;
-    document.getElementById("rewardMessage").innerText = "";
+    exerciseCount=0;
+    dayCount=0;
+    document.getElementById("rewardMessage").innerText="";
     document.getElementById("rewardCard").classList.remove("active");
     updateUI();
     saveData();
 }
 
+// Reward
 function showReward(){
     const rewardMsg = document.getElementById("rewardMessage");
     const rewardCard = document.getElementById("rewardCard");
-    rewardMsg.innerText = "🎉 DU HAR VUNDET ET POKÉMON KORT! 🎉";
+    rewardMsg.innerText="🎉 DU HAR VUNDET ET POKÉMON KORT! 🎉";
     rewardCard.classList.add("active");
-    createConfetti(200); // masser af konfetti
+    createConfetti(200);
 }
 
+// Confetti
 function createConfetti(amount){
     for(let i=0;i<amount;i++){
-        const div = document.createElement("div");
+        const div=document.createElement("div");
         div.classList.add("confetti-piece");
         div.style.left=Math.random()*window.innerWidth+"px";
         div.style.backgroundColor=`hsl(${Math.random()*360},100%,50%)`;
-        div.style.width = (Math.random()*6+4)+"px";
-        div.style.height = (Math.random()*6+4)+"px";
-        div.style.animationDuration = (Math.random()*2+2)+"s";
+        div.style.width=(Math.random()*6+4)+"px";
+        div.style.height=(Math.random()*6+4)+"px";
+        div.style.animationDuration=(Math.random()*2+2)+"s";
         document.body.appendChild(div);
         setTimeout(()=>{div.remove();},4000);
     }
 }
 
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js'); }
+// Save/load
+function saveData(){
+    localStorage.setItem("exerciseCount",exerciseCount);
+    localStorage.setItem("dayCount",dayCount);
+}
+function loadData(){
+    exerciseCount=parseInt(localStorage.getItem("exerciseCount"))||0;
+    dayCount=parseInt(localStorage.getItem("dayCount"))||0;
+    updateUI();
+}
+
+initDayBoxes();
 loadData();
 </script>
 
