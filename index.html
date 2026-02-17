@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trænings Lykkehjul</title>
-
+<title>Laurits' træningshjul</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff6600">
 
@@ -15,20 +14,19 @@ body {
     background: linear-gradient(to bottom, #6ec6ff, #ffffff);
     margin: 0;
     padding: 20px;
+    overflow-x: hidden;
 }
 
 .container {
     background: white;
     padding: 20px;
     border-radius: 25px;
-    max-width: 420px;
+    max-width: 450px;
     margin: auto;
     box-shadow: 0 15px 35px rgba(0,0,0,0.2);
 }
 
-h1 {
-    color: #ff6600;
-}
+h1 { color: #ff6600; }
 
 input {
     margin: 5px;
@@ -41,7 +39,7 @@ input {
 
 button {
     padding: 12px 20px;
-    margin: 10px;
+    margin: 10px 5px;
     font-size: 16px;
     border-radius: 20px;
     border: none;
@@ -50,94 +48,92 @@ button {
     font-weight: bold;
 }
 
-button:hover {
-    background-color: #ff9900;
+button:hover { background-color: #ff9900; }
+
+#wheel-container {
+    position: relative;
+    margin: 20px auto;
+    width: 250px;
+    height: 250px;
 }
 
 #wheel {
-    margin: 20px auto;
-    width: 180px;
-    height: 180px;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
     border: 8px solid #ff6600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    background: #fff3cd;
-    transition: transform 1s ease-out;
-    padding: 10px;
+    transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.progress-bar {
+#wheel canvas {
     width: 100%;
-    background: #eee;
-    border-radius: 20px;
-    margin: 10px 0;
+    height: 100%;
 }
 
-.progress-fill {
-    height: 22px;
-    border-radius: 20px;
-    background: linear-gradient(to right, #00cc66, #009933);
-    width: 0%;
-    transition: width 0.3s ease;
+#pointer {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    margin-left: -10px;
+    width: 0; 
+    height: 0; 
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 20px solid red;
 }
 
-.reward-img {
-    height: 150px;
-    width: 100px;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
-    opacity: 0.5;
-    transition: 0.4s;
-}
+.progress-bar { width: 100%; background: #eee; border-radius: 20px; margin: 10px 0; }
+.progress-fill { height: 22px; border-radius: 20px; background: linear-gradient(to right, #00cc66, #009933); width: 0%; transition: width 0.3s ease; }
 
-.reward-img.active {
-    opacity: 1;
-    transform: scale(1.1);
-}
+.reward-img { height: 150px; width: 100px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.35); opacity: 0.5; transition: 0.4s; }
+.reward-img.active { opacity: 1; transform: scale(1.1); }
 
-#rewardMessage {
-    font-size: 20px;
-    color: #ff0000;
-    font-weight: bold;
+#rewardMessage { font-size: 20px; color: #ff0000; font-weight: bold; margin-top: 10px; }
+
+/* Konfetti */
+.confetti-piece {
+    position: absolute;
+    width: 8px; height: 8px;
+    background-color: #ffcc00;
+    opacity: 0.8;
+    animation: fall 3s linear forwards;
+}
+@keyframes fall {
+    0% { transform: translateY(0px) rotate(0deg); }
+    100% { transform: translateY(500px) rotate(360deg); opacity: 0; }
 }
 </style>
 </head>
 
 <body>
-
-<h1>🎯 Trænings Hjul</h1>
+<h1>🎯 Trænings Hjul PRO</h1>
 
 <div class="container">
 
 <h3>Indtast 5 øvelser</h3>
-
 <input type="text" id="ex1" placeholder="Øvelse 1">
 <input type="text" id="ex2" placeholder="Øvelse 2">
 <input type="text" id="ex3" placeholder="Øvelse 3">
 <input type="text" id="ex4" placeholder="Øvelse 4">
 <input type="text" id="ex5" placeholder="Øvelse 5">
 
-<div id="wheel">Drej!</div>
+<div id="wheel-container">
+    <div id="pointer"></div>
+    <canvas id="wheel"></canvas>
+</div>
 
 <button onclick="spinWheel()">Drej 🎡</button>
 <button onclick="completeExercise()">Udført ✅</button>
+<button onclick="resetAll()">Nulstil 🔄</button>
 
 <h3>Øvelser (0-5)</h3>
-<div class="progress-bar">
-    <div id="exerciseProgress" class="progress-fill"></div>
-</div>
+<div class="progress-bar"><div id="exerciseProgress" class="progress-fill"></div></div>
 
 <h3>Dage (0-10)</h3>
-<div class="progress-bar">
-    <div id="dayProgress" class="progress-fill"></div>
-</div>
+<div class="progress-bar"><div id="dayProgress" class="progress-fill"></div></div>
 
 <h3>🎁 10 dage = Pokémon kort</h3>
 <img id="rewardCard" class="reward-img" src="pokemonkort.jpg">
-
 <div id="rewardMessage"></div>
 
 </div>
@@ -145,6 +141,7 @@ button:hover {
 <script>
 let exerciseCount = 0;
 let dayCount = 0;
+let wheelRotation = 0;
 
 function saveData() {
     localStorage.setItem("exerciseCount", exerciseCount);
@@ -157,51 +154,103 @@ function loadData() {
     updateUI();
 }
 
+function drawWheel() {
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
+    const sectors = [
+        {color:"#FF6666", label: ex1.value || "Øvelse 1"},
+        {color:"#FFCC66", label: ex2.value || "Øvelse 2"},
+        {color:"#66CCFF", label: ex3.value || "Øvelse 3"},
+        {color:"#66FF66", label: ex4.value || "Øvelse 4"},
+        {color:"#CC66FF", label: ex5.value || "Øvelse 5"}
+    ];
+    const center = canvas.width/2;
+    const radius = canvas.width/2 - 5;
+    const step = 2 * Math.PI / sectors.length;
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.save();
+    ctx.translate(center,center);
+
+    sectors.forEach((sec,i)=>{
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.arc(0,0,radius,i*step,(i+1)*step);
+        ctx.fillStyle = sec.color;
+        ctx.fill();
+        ctx.strokeStyle="#000";
+        ctx.stroke();
+        ctx.save();
+        ctx.rotate(i*step + step/2);
+        ctx.fillStyle="#000";
+        ctx.font="14px Comic Sans MS";
+        ctx.textAlign="right";
+        ctx.fillText(sec.label,radius-10,0);
+        ctx.restore();
+    });
+
+    ctx.restore();
+}
+
 function spinWheel() {
-    const exercises = [
-        ex1.value, ex2.value, ex3.value, ex4.value, ex5.value
-    ].filter(e => e !== "");
-
-    if (exercises.length === 0) {
-        alert("Indtast mindst én øvelse!");
-        return;
-    }
-
-    const random = exercises[Math.floor(Math.random() * exercises.length)];
-    wheel.innerText = random;
-    wheel.style.transform = "rotate(" + (Math.random()*1080) + "deg)";
+    drawWheel();
+    const spins = Math.floor(Math.random()*5 + 5); // 5-9 spins
+    const deg = spins*360 + Math.floor(Math.random()*360);
+    wheelRotation += deg;
+    const canvas = document.getElementById("wheel");
+    canvas.style.transform = `rotate(${wheelRotation}deg)`;
 }
 
 function completeExercise() {
     exerciseCount++;
-
-    if (exerciseCount >= 5) {
-        exerciseCount = 0;
+    if(exerciseCount >=5){
+        exerciseCount=0;
         dayCount++;
+        if(dayCount >=10){
+            dayCount=0;
+            showReward();
+        }
     }
-
-    if (dayCount >= 10) {
-        document.getElementById("rewardMessage").innerText =
-            "🎉 DU HAR VUNDET ET POKÉMON KORT! 🎉";
-        document.getElementById("rewardCard").classList.add("active");
-        dayCount = 0;
-    }
-
     updateUI();
     saveData();
 }
 
-function updateUI() {
-    exerciseProgress.style.width = (exerciseCount/5)*100 + "%";
-    dayProgress.style.width = (dayCount/10)*100 + "%";
+function updateUI(){
+    document.getElementById("exerciseProgress").style.width = (exerciseCount/5)*100 + "%";
+    document.getElementById("dayProgress").style.width = (dayCount/10)*100 + "%";
 }
 
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js');
+function resetAll(){
+    exerciseCount=0;
+    dayCount=0;
+    document.getElementById("rewardMessage").innerText="";
+    document.getElementById("rewardCard").classList.remove("active");
+    updateUI();
+    saveData();
 }
 
+function showReward(){
+    const rewardMsg = document.getElementById("rewardMessage");
+    const rewardCard = document.getElementById("rewardCard");
+    rewardMsg.innerText="🎉 DU HAR VUNDET ET POKÉMON KORT! 🎉";
+    rewardCard.classList.add("active");
+    createConfetti();
+}
+
+function createConfetti(){
+    for(let i=0;i<100;i++){
+        const div = document.createElement("div");
+        div.classList.add("confetti-piece");
+        div.style.left=Math.random()*window.innerWidth+"px";
+        div.style.backgroundColor=`hsl(${Math.random()*360},100%,50%)`;
+        div.style.animationDuration=(Math.random()*2+3)+"s";
+        document.body.appendChild(div);
+        setTimeout(()=>{div.remove();},4000);
+    }
+}
+
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js'); }
 loadData();
 </script>
-
 </body>
 </html>
